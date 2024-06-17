@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 import random
 
 MAX_LEVELS: int = 4
@@ -47,6 +47,22 @@ class SkipList:
         
         return curr, updates
     
+    def find(self, key: Any) -> Any:
+        level = self.maxlevels - 1
+        curr  = self.root
+
+        while level >= 0:
+            next = curr.next[level]
+            if next is None:
+                level -= 1
+            else:
+                if next.value <= key:
+                    curr = next
+                else:
+                    level -= 1
+        
+        return curr
+    
     def insert(self, value: Any):
         candidate, updates = self.find_candidate(value)
         node = SkipListNode(value, self.maxlevels)
@@ -72,6 +88,14 @@ class SkipList:
                 curr = curr.next[i]
             s += "END\n"
         return s
+    
+    def dump(self) -> List[str]:
+        # get level 0 and dump everything.
+        rval = []
+        current = self.root.next[0]
+        while current is not None:
+            rval.append(current.value)
+        return rval
 
 if __name__ == "__main__":
     items = [ random.randint(0, 10000000) for i in range(10000) ] 
