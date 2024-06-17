@@ -1,8 +1,9 @@
-'''
+"""
 A (very) simple sorted Linked list implementation.
-'''
+"""
 
 from typing import Self, Any
+
 
 class LinkedListNode:
     def __init__(self, value: Any) -> None:
@@ -33,12 +34,12 @@ class LinkedList:
         if candidate is not None and candidate.value == value:
             return candidate
         return None
-    
+
     def insert(self, node: LinkedListNode) -> None:
         prev, candidate = self.find_candidate(node.value)
         node.next = candidate
         prev.next = node
-        
+
     def __str__(self) -> str:
         current = self.root
         st = ""
@@ -47,7 +48,8 @@ class LinkedList:
             st += str(current.value) + "->"
         st += "END"
         return st
-       
+
+
 if __name__ == "__main__":
     ll = LinkedList()
     l0 = LinkedListNode(0)

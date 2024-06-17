@@ -31,27 +31,33 @@ class SkipList:
         level = self.maxlevels - 1
         curr  = self.root
         
+        updates = [None] * MAX_LEVELS
+         
         while level >= 0:
             next = curr.next[level]
             if next is None:
+                updates[level] = curr
                 level -= 1
             else:
                 if next.value <= value: # made a mistake here. next.value is to be compared.
                     curr = next
                 else:
+                    updates[level] = curr
                     level -= 1
-       
-        return curr
+        
+        return curr, updates
     
     def insert(self, value: Any):
-        candidate = self.find_candidate(value)
+        candidate, updates = self.find_candidate(value)
         node = SkipListNode(value)
-        
-        # update the bottom-most pointer. 
+
+        # update the bottom-most pointer.
         old_ref = candidate.next[0]
         node.next[0] = old_ref
         candidate.next[0] = node
-        
+
+        # Promote unconditionally to build a full list.
+           
     def __str__(self) -> str:
         s = ""
         for i in range(MAX_LEVELS - 1, -1, -1):
