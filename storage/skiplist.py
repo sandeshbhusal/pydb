@@ -5,9 +5,9 @@ MAX_LEVELS: int = 4
 
 
 class SkipListNode:
-    def __init__(self, value: Any) -> None:
+    def __init__(self, value: Any, levels: int) -> None:
         self.value = value
-        self.next = [None] * (MAX_LEVELS)
+        self.next = [None] * (levels)
         
     def insert_after(self, level: int, node: "SkipListNode") -> None:
         old_ref = self.next[level]
@@ -19,9 +19,9 @@ class SkipListNode:
 
 
 class SkipList:
-    def __init__(self) -> None:
-        self.root = SkipListNode(-1)  # Sentinel node.
-        self.maxlevels = MAX_LEVELS
+    def __init__(self, levels = MAX_LEVELS) -> None:
+        self.maxlevels = levels
+        self.root = SkipListNode(-1, levels=self.maxlevels)  # Sentinel node.
 
     def find_candidate(self, value: Any) -> SkipListNode:
         """
@@ -31,7 +31,7 @@ class SkipList:
         level = self.maxlevels - 1
         curr  = self.root
         
-        updates = [None] * MAX_LEVELS
+        updates = [None] * self.maxlevels 
          
         while level >= 0:
             next = curr.next[level]
@@ -49,7 +49,7 @@ class SkipList:
     
     def insert(self, value: Any):
         candidate, updates = self.find_candidate(value)
-        node = SkipListNode(value)
+        node = SkipListNode(value, self.maxlevels)
 
         # made a second error here - circular ref by promoting the bottom-most
         # layer first and trying to do all things at once.
@@ -64,7 +64,7 @@ class SkipList:
            
     def __str__(self) -> str:
         s = ""
-        for i in range(MAX_LEVELS - 1, -1, -1):
+        for i in range(self.maxlevels - 1, -1, -1):
             curr = self.root.next[i]
             s += f"ROOT {i} -> "
             while curr is not None:
@@ -72,8 +72,15 @@ class SkipList:
                 curr = curr.next[i]
             s += "END\n"
         return s
- 
-sl = SkipList()
-for i in range(0, 10):
-    sl.insert(random.randint(0, 100))
-print(sl)
+
+if __name__ == "__main__":
+    items = [ random.randint(0, 10000000) for i in range(10000) ] 
+    sl = SkipList(levels = 16)
+    for item in items:
+        sl.insert(item)
+    
+    # search
+    for item in items:
+        assert(sl.find_candidate(item)[0].value == item)
+
+    print(sl)
