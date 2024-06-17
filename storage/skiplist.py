@@ -51,12 +51,16 @@ class SkipList:
         candidate, updates = self.find_candidate(value)
         node = SkipListNode(value)
 
-        # update the bottom-most pointer.
-        old_ref = candidate.next[0]
-        node.next[0] = old_ref
-        candidate.next[0] = node
-
-        # Promote unconditionally to build a full list.
+        # made a second error here - circular ref by promoting the bottom-most
+        # layer first and trying to do all things at once.
+        for level, update in enumerate(updates):
+            chance = True if level == 0 else random.random() < 0.5
+            if chance:
+                old_ref = update.next[level]
+                node.next[level] = old_ref
+                update.next[level] = node
+            else:
+                break
            
     def __str__(self) -> str:
         s = ""
@@ -68,8 +72,8 @@ class SkipList:
                 curr = curr.next[i]
             s += "END\n"
         return s
-                
+ 
 sl = SkipList()
-for i in range(0, 5):
+for i in range(0, 10):
     sl.insert(random.randint(0, 100))
 print(sl)
