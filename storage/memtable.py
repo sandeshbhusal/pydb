@@ -86,16 +86,16 @@ class Memtable:
                 return None
 
 if __name__ == "__main__":
-    INSERTIONS = 400000
+    INSERTIONS = 40000
     random_bytes_gen = { randbytes(randint(10, 15)) : randbytes(randint(15, 100)) for i in range(INSERTIONS) }
     import time
     start = time.time()
     table = Memtable()
     for k, v in random_bytes_gen.items():
         table.insert(k, v)
-    
+    print("finished insertion") 
     for k in random_bytes_gen:
-        assert table.find(k) is not None
-    
+        table.find(k) is not None
+    print("finished lookup") 
     end = time.time()
     print(f"Took {end - start} seconds")

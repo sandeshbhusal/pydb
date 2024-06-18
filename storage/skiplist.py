@@ -94,7 +94,8 @@ class SkipList:
         rval = []
         current = self.root.next[0]
         while current is not None:
-            rval.append(current.value)
+            rval.append(str(current.value))
+            current = current.next[0]
         return rval
 
 if __name__ == "__main__":
