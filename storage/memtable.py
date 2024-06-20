@@ -3,51 +3,55 @@ from random import randbytes, randint
 from skiplist import SkipList
 from bloomfilter import BloomFilter
 
-THRESHOLD = 1000
+THRESHOLD = 1_000_000 # 1 MB pages
+
 
 class sst_entry:
     def __init__(self, key, value) -> None:
         self.key = key
         self.value = value
-    
+
     def __eq__(self, value: object) -> bool:
         return self.key == value.key
 
     def __lt__(self, other) -> bool:
         return self.key < other.key
-    
+
     def __gt__(self, other) -> bool:
         return self.key > other.key
-    
+
     def __ge__(self, other) -> bool:
         return self.key >= other.key
-    
+
     def __le__(self, other) -> bool:
         return self.key <= other.key
-    
+
     def __repr__(self) -> str:
         return str(self.key)
 
     def __hash__(self) -> int:
         return hash(self.key)
-    
+
     def __str__(self) -> str:
         return f"{self.key}::{self.value}"
-    
+
+
 class InsertEntry(sst_entry):
     def __init__(self, key, value) -> None:
         super().__init__(key, value)
+
 
 class SearchEntry(sst_entry):
     def __init__(self, key) -> None:
         super().__init__(key, None)
 
+
 class Memtable:
     def __init__(self) -> None:
         self.current_sst = 0
         self.mutex = Lock()
-        self.cache = SkipList(levels = 16)
-        self.size  = 0
+        self.cache = SkipList(levels=16)
+        self.size = 0
         self.locked = False
         self.filter = BloomFilter()
 
@@ -59,24 +63,23 @@ class Memtable:
     def insert(self, key, value):
         with self.mutex:
             # Check size.
-            # if self.size <= THRESHOLD:
-            self.cache.insert(InsertEntry(key, value))
-            self.size += len(key)
-            self.size += len(value)
+            if self.size <= THRESHOLD:
+                self.cache.insert(InsertEntry(key, value))
+                self.size += len(key)
+                self.size += len(value)
 
-            # else:
-            #     # dump this file into a SST table.
-            #     table_file = f"sst_{self.current_sst}.sst"
-            #     with open(table_file, "w") as sstfile:
-            #         for item in self.cache.dump():
-            #             sstfile.write(item)
-            #     self.cache = SkipList(levels = 16)
-            #     self.size = 0
-            #     self.locked = False
-            #     self.current_sst += 1 
-            
+            else:
+                # dump this file into a SST table.
+                table_file = f"sst_{self.current_sst}.sst"
+                with open(table_file, "w") as sstfile:
+                    for item in self.cache.dump():
+                        sstfile.write(item)
+                self.cache = SkipList(levels = 16)
+                self.size = 0
+                self.locked = False
+                self.current_sst += 1
+
             self.filter.insert(key)
-                
 
     def find(self, key):
         # At this point it's worth exploring bloom filters.
@@ -92,17 +95,22 @@ class Memtable:
         else:
             return None
 
+
 if __name__ == "__main__":
     INSERTIONS = 40000
-    random_bytes_gen = { randbytes(randint(10, 15)) : randbytes(randint(15, 100)) for i in range(INSERTIONS) }
+    random_bytes_gen = {
+        randbytes(randint(10, 15)): randbytes(randint(15, 100))
+        for i in range(INSERTIONS)
+    }
     import time
+
     start = time.time()
     table = Memtable()
     for k, v in random_bytes_gen.items():
         table.insert(k, v)
-    print("finished insertion") 
+    print(f"finished insertion {time.time() -start} seconds")
     for k in random_bytes_gen:
         table.find(k) is not None
-    print("finished lookup") 
+    print(f"finished lookup {time.time() -start} seconds")
     end = time.time()
     print(f"Took {end - start} seconds")
