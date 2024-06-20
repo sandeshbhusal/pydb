@@ -1,6 +1,7 @@
 from threading import Lock
 from random import randbytes, randint
 from skiplist import SkipList
+from bloomfilter import BloomFilter
 
 THRESHOLD = 1000
 
@@ -48,6 +49,7 @@ class Memtable:
         self.cache = SkipList(levels = 16)
         self.size  = 0
         self.locked = False
+        self.filter = BloomFilter()
 
     def freeze(self):
         with self.mutex:
@@ -57,33 +59,38 @@ class Memtable:
     def insert(self, key, value):
         with self.mutex:
             # Check size.
-            if self.size <= THRESHOLD:
-                self.cache.insert(InsertEntry(key, value))
-                self.size += len(key)
-                self.size += len(value)
+            # if self.size <= THRESHOLD:
+            self.cache.insert(InsertEntry(key, value))
+            self.size += len(key)
+            self.size += len(value)
 
-            else:
-                # dump this file into a SST table.
-                table_file = f"sst_{self.current_sst}.sst"
-                with open(table_file, "w") as sstfile:
-                    for item in self.cache.dump():
-                        sstfile.write(item)
-                self.cache = SkipList(levels = 16)
-                self.size = 0
-                self.locked = False
-                self.current_sst += 1 
+            # else:
+            #     # dump this file into a SST table.
+            #     table_file = f"sst_{self.current_sst}.sst"
+            #     with open(table_file, "w") as sstfile:
+            #         for item in self.cache.dump():
+            #             sstfile.write(item)
+            #     self.cache = SkipList(levels = 16)
+            #     self.size = 0
+            #     self.locked = False
+            #     self.current_sst += 1 
+            
+            self.filter.insert(key)
                 
 
     def find(self, key):
         # At this point it's worth exploring bloom filters.
-        with self.mutex:
-            # search cache for skiplistnode
-            found = self.cache.find(SearchEntry(key))
-            # This returns a "candidate" key
-            if found.value.key == key:
-                return found.value.value
-            else:
-                return None
+        if self.filter.check(key):
+            with self.mutex:
+                # search cache for skiplistnode
+                found = self.cache.find(SearchEntry(key))
+                # This returns a "candidate" key
+                if found.value.key == key:
+                    return found.value.value
+                else:
+                    return None
+        else:
+            return None
 
 if __name__ == "__main__":
     INSERTIONS = 40000

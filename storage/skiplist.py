@@ -97,6 +97,28 @@ class SkipList:
             rval.append(str(current.value))
             current = current.next[0]
         return rval
+    
+    def merge(self, older: 'SkipList') -> 'SkipList':
+        # get root iterators for both skiplists.
+        # we always call merge with newer skiplist
+        first = self.root.next[0]
+        second = older.root.next[0]
+        sl = SkipList()
+
+        while first is not None and second is not None:
+            if first.value == second.value:
+                sl.insert(first)
+                first = first.next[0]
+                second = second.next[0]
+
+            if first.value < second.value:
+                sl.insert(first)
+                first = first.next[0]
+            else:
+                sl.insert(second)
+                second = second.next[0]
+
+        return sl
 
 if __name__ == "__main__":
     items = [ random.randint(0, 10000000) for i in range(10000) ] 
