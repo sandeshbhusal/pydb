@@ -83,8 +83,8 @@ class Memtable:
 
     def find(self, key):
         # At this point it's worth exploring bloom filters.
-        if self.filter.check(key):
-            with self.mutex:
+        with self.mutex:
+            if self.filter.check(key):
                 # search cache for skiplistnode
                 found = self.cache.find(SearchEntry(key))
                 # This returns a "candidate" key
@@ -92,8 +92,8 @@ class Memtable:
                     return found.value.value
                 else:
                     return None
-        else:
-            return None
+            else:
+                return None
 
 
 if __name__ == "__main__":

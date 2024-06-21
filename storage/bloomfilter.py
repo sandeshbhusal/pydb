@@ -28,5 +28,35 @@ class BloomFilter:
 
 if __name__ == "__main__":
     bf = BloomFilter()
-    bf.insert("abc")
-    assert bf.check("abc")
+    import random
+    import time
+    
+    num_insertions = 4000
+    valid_keys = [
+        random.randbytes(random.randint(5, 10)) for _ in range(num_insertions // 2)
+    ]
+   
+    invalid_keys = [
+        random.randbytes(random.randint(5, 10)) for _ in range(num_insertions // 2)
+    ]
+    
+    fp = 0
+    start = time.time()
+   
+    for key in valid_keys:
+        bf.insert(key)
+    
+    key_insert = time.time()
+    
+    for key in invalid_keys:
+        output = bf.check(key)
+        if output:
+            fp += 1
+    
+    for key in valid_keys:
+        output = bf.check(key)
+        if not output:
+            print("Assertion failed. The filter is producing NO for items that are definitely there")
+    end = time.time() 
+    key_check = time.time()
+    print(f"Finished insertion in {key_insert - start} time and validity check in {end - start} seconds.")  
